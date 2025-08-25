@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewPro AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Summary Modal -->
+        <div id="summary-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Interview Performance Summary</h2>
+                    <button class="close-modal"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="summary-section">
+                        <h3>Overall Rating</h3>
+                        <div id="overall-rating" class="rating-display"></div>
+                    </div>
+                    
+                    <div class="summary-section">
+                        <h3>Performance Score</h3>
+                        <div class="score-container">
+                            <div id="performance-score-display" class="score-circle"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-section">
+                        <h3>Strengths</h3>
+                        <ul id="strengths-list" class="summary-list"></ul>
+                    </div>
+                    
+                    <div class="summary-section">
+                        <h3>Areas for Improvement</h3>
+                        <ul id="improvement-list" class="summary-list"></ul>
+                    </div>
+                    
+                    <div class="summary-section">
+                        <h3>Skill Assessment</h3>
+                        <div id="skill-assessment" class="skill-grid"></div>
+                    </div>
+                    
+                    <div class="summary-section">
+                        <h3>Recommendations</h3>
+                        <ul id="recommendations-list" class="summary-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <header>
+                <div class="logo-container">
+                    <i class="fa-solid fa-robot logo-icon"></i>
+                    <h1>InterviewPro<span class="accent">AI</span></h1>
+                </div>
+                <p class="tagline">Master your technical interviews with our AI-powered practice platform</p>
+            </header>
+
+            <main>
+                <!-- Setup view -->
+                <div id="setup-view" class="setup-container">
+                    <div class="intro-text">
+                        <h2>Prepare for Success</h2>
+                        <p>Upload your resume, select your interview difficulty, and practice with our intelligent AI interviewer that adapts to your skills and experience.</p>
+                    </div>
+                    
+                    <form id="interview-form" class="setup-card">
+                        <div class="form-group">
+                            <label for="resume-upload"><i class="fa-solid fa-file-pdf"></i> Upload Resume</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="resume-upload" name="resume" accept=".pdf" required>
+                                <div class="file-upload-info">PDF format only</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="difficulty"><i class="fa-solid fa-gauge-high"></i> Interview Difficulty</label>
+                            <div class="select-wrapper">
+                                <select id="difficulty" name="difficulty">
+                                    <option value="Easy">Entry Level</option>
+                                    <option value="Medium" selected>Intermediate</option>
+                                    <option value="Hard">Advanced</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="features-list">
+                            <div class="feature-item"><i class="fa-solid fa-check-circle"></i> Resume-tailored questions</div>
+                            <div class="feature-item"><i class="fa-solid fa-check-circle"></i> Real-time feedback</div>
+                            <div class="feature-item"><i class="fa-solid fa-check-circle"></i> Technical & behavioral questions</div>
+                        </div>
+                        
+                        <button type="submit" id="start-btn" class="primary-btn">
+                            <i class="fa-solid fa-play"></i> Start Interview
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Interview view -->
+                <div id="interview-view" class="hidden">
+                    <div class="interview-header">
+                        <div class="status-panel">
+                            <div class="status-indicator">
+                                <i class="fa-solid fa-circle status-dot"></i>
+                                <p id="status-text">Connecting to interviewer...</p>
+                            </div>
+                            <div id="network-status" class="network-status online">
+                                <i class="fa-solid fa-wifi"></i> <span id="network-status-text">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="transcript-container">
+                        <div class="transcript-panel" id="transcript"></div>
+                    </div>
+                    
+                    <div class="interview-controls">
+                        <button id="retry-btn" class="secondary-btn hidden">
+                            <i class="fa-solid fa-rotate"></i> Retry Connection
+                        </button>
+                        <button id="summary-btn" class="primary-btn hidden">
+                            <i class="fa-solid fa-chart-bar"></i> View Performance Summary
+                        </button>
+                        <button id="end-btn" class="danger-btn">
+                            <i class="fa-solid fa-xmark"></i> End Interview
+                        </button>
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <div class="footer-content">
+                    <p><i class="fa-solid fa-bolt"></i> Powered by Groq | <i class="fa-regular fa-copyright"></i> 2025 InterviewPro AI</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

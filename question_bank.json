@@ -1,0 +1,45 @@
+[
+  {
+    "id": "q1",
+    "text": "Explain the difference between a process and a thread.",
+    "tags": [
+      "os",
+      "concurrency"
+    ],
+    "difficulty": "Easy"
+  },
+  {
+    "id": "q2",
+    "text": "How does a hash table handle collisions? Provide at least two strategies.",
+    "tags": [
+      "data-structures"
+    ],
+    "difficulty": "Easy"
+  },
+  {
+    "id": "q3",
+    "text": "Given an array of integers, design an O(n) algorithm to find the majority element (appears > n/2 times).",
+    "tags": [
+      "algorithms"
+    ],
+    "difficulty": "Medium"
+  },
+  {
+    "id": "q4",
+    "text": "Write code to detect a cycle in a directed graph.",
+    "tags": [
+      "graphs",
+      "algorithms",
+      "coding"
+    ],
+    "difficulty": "Hard"
+  },
+  {
+    "id": "q5",
+    "text": "Describe the steps to normalize a relational database and why normalization sometimes hurts performance.",
+    "tags": [
+      "databases"
+    ],
+    "difficulty": "Medium"
+  }
+]
