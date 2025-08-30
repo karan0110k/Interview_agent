@@ -9,11 +9,13 @@ from datetime import datetime
 from enum import Enum
 
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import fitz  # PyMuPDF
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from groq import Groq, GroqError
+from models import User, InterviewSession as DBInterviewSession
 
 # ---- Configuration ----
 class Config:
@@ -259,15 +261,186 @@ class InterviewSession:
 
 # ---- Flask App ----
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get_by_id(user_id)
+
 llm_client = LLMClient(api_key=Config.GROQ_API_KEY)
 question_bank = QuestionBank(filepath=Config.DEFAULT_QUESTIONS_PATH)
 SESSIONS: Dict[str, InterviewSession] = {}
 
 @app.route('/')
 def index():
-    return render_template('index.html') if os.path.exists('templates/index.html') else "<h1>Agentic Interviewer is running.</h1>"
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = True if request.form.get('remember') else False
+        
+        user = User.get_by_email(email)
+        
+        if user and user.check_password(password):
+            login_user(user, remember=remember)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
+        else:
+            flash('Invalid email or password', 'danger')
+    
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Validate form data
+        if not name or not email or not password or not confirm_password:
+            flash('All fields are required', 'danger')
+            return render_template('signup.html')
+        
+        if password != confirm_password:
+            flash('Passwords do not match', 'danger')
+            return render_template('signup.html')
+        
+        # Check if user already exists
+        existing_user = User.get_by_email(email)
+        if existing_user:
+            flash('Email already registered', 'danger')
+            return render_template('signup.html')
+        
+        # Create new user
+        user = User(name=name, email=email)
+        user.set_password(password)
+        user.save()
+        
+        flash('Account created successfully! Please log in.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('signup.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out', 'success')
+    return redirect(url_for('login'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Get user's interview sessions
+    sessions = DBInterviewSession.get_by_user_id(current_user.id)
+    return render_template('dashboard.html', sessions=sessions)
+
+@app.route('/session/<session_id>')
+@login_required
+def session_details(session_id):
+    # Get the specific interview session
+    try:
+        session = DBInterviewSession.get_by_id(ObjectId(session_id))
+        if not session or session.user_id != current_user.id:
+            flash('Session not found', 'danger')
+            return redirect(url_for('dashboard'))
+        return render_template('session_details.html', session=session)
+    except Exception as e:
+        logger.error(f"Error in session_details: {e}", exc_info=True)
+        flash('An error occurred while retrieving the session', 'danger')
+        return redirect(url_for('dashboard'))
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
+@app.route('/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    
+    if not name or not email:
+        flash('All fields are required', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Check if email is already taken by another user
+    existing_user = User.get_by_email(email)
+    if existing_user and existing_user.id != current_user.id:
+        flash('Email already registered by another user', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Update user profile
+    current_user.name = name
+    current_user.email = email
+    current_user.save()
+    
+    flash('Profile updated successfully', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/update-password', methods=['POST'])
+@login_required
+def update_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    
+    if not current_password or not new_password or not confirm_password:
+        flash('All fields are required', 'danger')
+        return redirect(url_for('settings'))
+    
+    if new_password != confirm_password:
+        flash('New passwords do not match', 'danger')
+        return redirect(url_for('settings'))
+    
+    if not current_user.check_password(current_password):
+        flash('Current password is incorrect', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Update password
+    current_user.set_password(new_password)
+    current_user.save()
+    
+    flash('Password updated successfully', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/update-preferences', methods=['POST'])
+@login_required
+def update_preferences():
+    default_difficulty = request.form.get('default_difficulty')
+    focus_areas = request.form.getlist('focus_areas')
+    
+    # Here you would save these preferences to the user's profile
+    # For now, we'll just show a success message
+    flash('Interview preferences updated successfully', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/interview')
+@login_required
+def interview():
+    return render_template('index.html')
 
 @app.route('/start-interview', methods=['POST'])
+@login_required
 def start_interview():
     if 'resume' not in request.files: return jsonify({"error": "Resume file is required."}), 400
     try:
@@ -281,6 +454,17 @@ def start_interview():
         welcome_message = "Welcome to InterviewProAI. To begin, please tell me a little about yourself and your background."
         session.history.append({"role": "assistant", "content": welcome_message, "meta": {"action": "introduction"}})
         SESSIONS[session_id] = session
+        
+        # Save to MongoDB
+        db_session = DBInterviewSession(
+            user_id=current_user.id,
+            resume_text=resume_text,
+            resume_summary=session.resume_summary,
+            difficulty=difficulty,
+            history=session.history,
+            performance_score=session.performance_score
+        )
+        db_session.save()
 
         return jsonify({
             "session_id": session_id,
@@ -293,6 +477,7 @@ def start_interview():
         return jsonify({"error": "Internal server error."}), 500
 
 @app.route('/next-question', methods=['POST'])
+@login_required
 def next_question_route():
     try:
         data = request.get_json()
@@ -306,6 +491,12 @@ def next_question_route():
             first_action = Action.ASK_BEHAVIORAL
             first_question = session._generate_question(first_action, tags=session.resume_keywords.get('technical_skills'))
             session.history.append({"role": "assistant", "content": first_question, "meta": {"action": first_action.value}})
+            
+            # Update MongoDB session
+            db_session = DBInterviewSession.get_by_user_id(current_user.id)[0]  # Get the most recent session
+            db_session.history = session.history
+            db_session.save()
+            
             return jsonify({
                 "question": first_question,
                 "evaluation": {"score": None, "feedback": "Introduction received. Let's begin."},
@@ -325,10 +516,23 @@ def next_question_route():
         if action == Action.END_INTERVIEW:
             final_message = "Thank you for your time. This concludes the interview."
             session.history.append({"role": "assistant", "content": final_message, "meta": {"action": action.value}})
+            
+            # Update MongoDB session
+            db_session = DBInterviewSession.get_by_user_id(current_user.id)[0]  # Get the most recent session
+            db_session.history = session.history
+            db_session.performance_score = session.performance_score
+            db_session.save()
+            
             return jsonify({"question": final_message, "evaluation": eval_result, "performance": session.performance_score, "status": "finished"})
 
         next_q = session._generate_question(action, plan.get("tags"), plan.get("difficulty"))
         session.history.append({"role": "assistant", "content": next_q, "meta": {"action": action.value}})
+
+        # Update MongoDB session
+        db_session = DBInterviewSession.get_by_user_id(current_user.id)[0]  # Get the most recent session
+        db_session.history = session.history
+        db_session.performance_score = session.performance_score
+        db_session.save()
 
         return jsonify({"question": next_q, "evaluation": eval_result, "performance": session.performance_score, "status": "in-progress"})
     except Exception as e:
@@ -336,6 +540,7 @@ def next_question_route():
         return jsonify({"error": "Failed to generate next question."}), 500
 
 @app.route('/interview-summary', methods=['POST'])
+@login_required
 def interview_summary():
     try:
         data = request.get_json()
@@ -347,9 +552,83 @@ def interview_summary():
             
         summary = session.generate_interview_summary()
         
+        # Calculate detailed performance metrics
+        technical_score = 0
+        communication_score = 0
+        problem_solving_score = 0
+        relevant_experience_score = 0
+        
+        question_count = 0
+        technical_count = 0
+        communication_count = 0
+        problem_solving_count = 0
+        relevant_experience_count = 0
+        
+        # Analyze history to categorize questions and calculate specific scores
+        for entry in session.history:
+            if entry.get('role') == 'system' and 'Evaluation' in entry.get('content', ''):
+                eval_text = entry.get('content', '')
+                try:
+                    # Extract score from evaluation
+                    score_str = eval_text.split('score": ')[1].split(',')[0]
+                    score = float(score_str)
+                    
+                    # Find the corresponding question
+                    idx = session.history.index(entry)
+                    if idx >= 2:  # Make sure we have a question before the answer
+                        question_text = session.history[idx-2].get('content', '').lower()
+                        
+                        question_count += 1
+                        
+                        # Categorize questions
+                        if any(keyword in question_text for keyword in ['technical', 'technology', 'programming', 'code', 'algorithm']):
+                            technical_score += score
+                            technical_count += 1
+                        
+                        if any(keyword in question_text for keyword in ['communicate', 'explain', 'team', 'collaboration']):
+                            communication_score += score
+                            communication_count += 1
+                        
+                        if any(keyword in question_text for keyword in ['problem', 'solve', 'challenge', 'approach']):
+                            problem_solving_score += score
+                            problem_solving_count += 1
+                        
+                        if any(keyword in question_text for keyword in ['experience', 'project', 'work', 'achievement']):
+                            relevant_experience_score += score
+                            relevant_experience_count += 1
+                except:
+                    pass
+        
+        # Normalize scores
+        technical_score = (technical_score / technical_count) if technical_count > 0 else 0
+        communication_score = (communication_score / communication_count) if communication_count > 0 else 0
+        problem_solving_score = (problem_solving_score / problem_solving_count) if problem_solving_count > 0 else 0
+        relevant_experience_score = (relevant_experience_score / relevant_experience_count) if relevant_experience_count > 0 else 0
+        
+        # Create detailed performance metrics
+        performance_metrics = {
+            'technical_score': technical_score,
+            'communication_score': communication_score,
+            'problem_solving_score': problem_solving_score,
+            'relevant_experience_score': relevant_experience_score,
+            'question_count': question_count
+        }
+        
+        # Add performance metrics to summary
+        if isinstance(summary, dict):
+            summary['performance_metrics'] = performance_metrics
+        
+        # Update MongoDB session with final summary
+        db_session = DBInterviewSession.get_by_user_id(current_user.id)[0]  # Get the most recent session
+        db_session.summary = summary
+        db_session.performance_score = session.performance_score
+        db_session.performance_metrics = performance_metrics
+        db_session.save()
+        
         return jsonify({
             "summary": summary,
             "performance_score": session.performance_score,
+            "performance_metrics": performance_metrics,
             "status": "success"
         })
     except Exception as e:

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewPro AI - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="dashboard-header">
+                <div class="logo-container">
+                    <i class="fa-solid fa-robot logo-icon"></i>
+                    <h1>InterviewPro<span class="accent">AI</span></h1>
+                </div>
+                <div class="user-nav">
+                    <div class="user-info">
+                        <span>Welcome, {{ current_user.name }}</span>
+                        <a href="/logout" class="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div class="dashboard-container">
+                    <div class="dashboard-sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <h3>{{ current_user.name }}</h3>
+                            <p>{{ current_user.email }}</p>
+                        </div>
+                        <nav class="dashboard-nav">
+                            <a href="/dashboard" class="active"><i class="fa-solid fa-home"></i> Dashboard</a>
+                            <a href="/interview"><i class="fa-solid fa-microphone"></i> New Interview</a>
+                            <a href="#"><i class="fa-solid fa-history"></i> Interview History</a>
+                            <a href="/settings"><i class="fa-solid fa-cog"></i> Settings</a>
+                        </nav>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <div class="dashboard-header">
+                            <h2>Your Interview Sessions</h2>
+                            <a href="/interview" class="primary-btn"><i class="fa-solid fa-plus"></i> New Interview</a>
+                        </div>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        {% if sessions %}
+                            <div class="sessions-grid">
+                                {% for session in sessions %}
+                                    <div class="session-card">
+                                        <div class="session-header">
+                                            <div class="session-date">
+                                                <i class="fa-solid fa-calendar"></i>
+                                                {{ session.created_at.strftime('%B %d, %Y') }}
+                                            </div>
+                                            <div class="session-score" data-score="{{ session.performance_score }}">
+                                                {{ (session.performance_score * 100)|int }}%
+                                            </div>
+                                        </div>
+                                        <div class="session-details">
+                                            <h3>{{ session.difficulty }} Interview</h3>
+                                            <p class="session-summary">{{ session.resume_summary[:100] }}...</p>
+                                        </div>
+                                        <div class="session-footer">
+                                            <a href="/session/{{ session.id }}" class="view-session-btn">
+                                                <i class="fa-solid fa-eye"></i> View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fa-solid fa-file-circle-question"></i>
+                                </div>
+                                <h3>No Interview Sessions Yet</h3>
+                                <p>Start your first interview to practice and improve your skills.</p>
+                                <a href="/interview" class="primary-btn"><i class="fa-solid fa-play"></i> Start First Interview</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <div class="footer-content">
+                    <p><i class="fa-solid fa-bolt"></i> Powered by Groq | <i class="fa-regular fa-copyright"></i> 2025 InterviewPro AI</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

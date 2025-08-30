@@ -5,3 +5,6 @@ PyMuPDF>=1.23.0
 hypercorn>=0.14.0
 pyngrok>=7.0.0
 groq>=0.5.0
+pymongo>=4.5.0
+flask-bcrypt>=1.0.1
+flask-login>=0.6.2

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewPro AI - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header>
+                <div class="logo-container">
+                    <i class="fa-solid fa-robot logo-icon"></i>
+                    <h1>InterviewPro<span class="accent">AI</span></h1>
+                </div>
+                <p class="tagline">Master your technical interviews with our AI-powered practice platform</p>
+            </header>
+
+            <main>
+                <div class="auth-container">
+                    <div class="auth-card">
+                        <h2>Login</h2>
+                        <p class="auth-subtitle">Welcome back! Please login to continue</p>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form id="login-form" action="/login" method="POST">
+                            <div class="form-group">
+                                <label for="email"><i class="fa-solid fa-envelope"></i> Email</label>
+                                <input type="email" id="email" name="email" required>
+                                <span id="email-error" class="error-message"></span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                                <input type="password" id="password" name="password" required>
+                                <span id="password-error" class="error-message"></span>
+                            </div>
+                            
+                            <div class="form-options">
+                                <div class="remember-me">
+                                    <input type="checkbox" id="remember" name="remember">
+                                    <label for="remember">Remember me</label>
+                                </div>
+                                <a href="#" class="forgot-password">Forgot password?</a>
+                            </div>
+                            
+                            <button type="submit" class="primary-btn">
+                                <i class="fa-solid fa-sign-in-alt"></i> Login
+                            </button>
+                        </form>
+                        
+                        <div class="auth-footer">
+                            <p>Don't have an account? <a href="/signup">Sign up</a></p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <div class="footer-content">
+                    <p><i class="fa-solid fa-bolt"></i> Powered by Groq | <i class="fa-regular fa-copyright"></i> 2025 InterviewPro AI</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='auth.js') }}"></script>
+</body>
+</html>

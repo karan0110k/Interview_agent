@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileUpload = document.getElementById('resume-upload');
     const summaryModal = document.getElementById('summary-modal');
     const closeModalBtn = document.querySelector('.close-modal');
+    
+    // Check if we're on the interview page
+    const isInterviewPage = setupView !== null && interviewView !== null;
 
     // --- State & Speech API ---
     let sessionId = null;
@@ -84,40 +87,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    interviewForm.addEventListener('submit', startInterview);
-    endBtn.addEventListener('click', endInterview);
-    retryBtn.addEventListener('click', handleReconnection);
-    summaryBtn.addEventListener('click', showInterviewSummary);
-    closeModalBtn.addEventListener('click', closeModal);
-    
-    // Initial network status check
-    updateNetworkStatus();
-    
-    // Network status event listeners
-    window.addEventListener('online', () => {
-        console.log('Network is now online');
-        updateStatus('Network connection restored. Continuing interview...');
+    if (isInterviewPage) {
+        interviewForm.addEventListener('submit', startInterview);
+        endBtn.addEventListener('click', endInterview);
+        retryBtn.addEventListener('click', handleReconnection);
+        summaryBtn.addEventListener('click', showInterviewSummary);
+        closeModalBtn.addEventListener('click', closeModal);
+        
+        // Initial network status check
         updateNetworkStatus();
+        
+        // Network status event listeners
+        window.addEventListener('online', () => {
+            console.log('Network is now online');
+            updateStatus('Network connection restored. Continuing interview...');
+            updateNetworkStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+              console.log('Network is now offline');
+              updateStatus('Network connection lost. Please check your internet connection.');
+              updateNetworkStatus();
+              
+              // If we're listening, stop the recognition
+              if (recognition && isListening) {
+                  try {
+                      recognition.stop();
+                      isListening = false;
+                  } catch (e) {
+                      console.error('Error stopping recognition:', e);
+                  }
+              }
+          });
+    }
+    
+    // Network status event listeners for non-interview pages
+    if (!isInterviewPage) {
+        // Add any global event listeners here if needed
         // Use the reconnection handler for more robust recovery
         if (sessionId) {
             handleReconnection();
         }
-    });
+    }
     
-    window.addEventListener('offline', () => {
-        console.log('Network is now offline');
-        updateStatus('Network connection lost. Please check your internet connection.');
-        updateNetworkStatus();
-        // If we're listening, stop the recognition
-        if (recognition && isListening) {
-            try {
-                recognition.stop();
-                isListening = false;
-            } catch (e) {
-                console.error('Error stopping recognition:', e);
+    // Initialize metric score styling for session details page
+    const metricScores = document.querySelectorAll('.metric-score');
+    if (metricScores.length > 0) {
+        metricScores.forEach(score => {
+            const scoreValue = parseFloat(score.getAttribute('data-score'));
+            if (scoreValue >= 0.8) {
+                score.style.color = '#22c55e'; // Green for high scores
+            } else if (scoreValue >= 0.6) {
+                score.style.color = '#f59e0b'; // Orange for medium scores
+            } else {
+                score.style.color = '#ef4444'; // Red for low scores
             }
-        }
-    });
+        });
+    }
+    
+    // End of DOMContentLoaded event listener
     
     // Check network status periodically
     setInterval(updateNetworkStatus, 5000);

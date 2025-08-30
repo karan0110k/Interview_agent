@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Details - InterviewPro AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header>
+                <div class="logo-container">
+                    <i class="fa-solid fa-robot logo-icon"></i>
+                    <h1>InterviewPro<span class="accent">AI</span></h1>
+                </div>
+            </header>
+
+            <main>
+                <div class="dashboard-container">
+                    <div class="dashboard-sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <h3>{{ current_user.name }}</h3>
+                            <p>{{ current_user.email }}</p>
+                        </div>
+                        <nav class="dashboard-nav">
+                            <a href="/dashboard"><i class="fa-solid fa-home"></i> Dashboard</a>
+                            <a href="/interview"><i class="fa-solid fa-microphone"></i> New Interview</a>
+                            <a href="#"><i class="fa-solid fa-history"></i> Interview History</a>
+                            <a href="/settings"><i class="fa-solid fa-cog"></i> Settings</a>
+                        </nav>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <div class="dashboard-header">
+                            <h2>Interview Session Details</h2>
+                            <a href="/dashboard" class="secondary-btn"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+                        </div>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <div class="session-details-container">
+                            <div class="session-meta">
+                                <div class="session-meta-item">
+                                    <span class="meta-label">Date:</span>
+                                    <span class="meta-value">{{ session.created_at.strftime('%B %d, %Y') }}</span>
+                                </div>
+                                <div class="session-meta-item">
+                                    <span class="meta-label">Difficulty:</span>
+                                    <span class="meta-value">{{ session.difficulty }}</span>
+                                </div>
+                                <div class="session-meta-item">
+                                    <span class="meta-label">Overall Score:</span>
+                                    <span class="meta-value score-badge">{{ (session.performance_score * 100)|int }}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="performance-summary">
+                                <h3>Performance Summary</h3>
+                                
+                                <div class="performance-metrics">
+                                    {% if session.performance_metrics %}
+                                        <div class="metrics-grid">
+                                            <div class="metric-card">
+                                                <h4>Technical Knowledge</h4>
+                                                <div class="metric-score" data-score="{{ session.performance_metrics.technical_score }}">
+                                                    {{ (session.performance_metrics.technical_score * 100)|int }}%
+                                                </div>
+                                            </div>
+                                            <div class="metric-card">
+                                                <h4>Communication Skills</h4>
+                                                <div class="metric-score" data-score="{{ session.performance_metrics.communication_score }}">
+                                                    {{ (session.performance_metrics.communication_score * 100)|int }}%
+                                                </div>
+                                            </div>
+                                            <div class="metric-card">
+                                                <h4>Problem Solving</h4>
+                                                <div class="metric-score" data-score="{{ session.performance_metrics.problem_solving_score }}">
+                                                    {{ (session.performance_metrics.problem_solving_score * 100)|int }}%
+                                                </div>
+                                            </div>
+                                            <div class="metric-card">
+                                                <h4>Relevant Experience</h4>
+                                                <div class="metric-score" data-score="{{ session.performance_metrics.relevant_experience_score }}">
+                                                    {{ (session.performance_metrics.relevant_experience_score * 100)|int }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="overall-score">
+                                            <div class="score-circle large">
+                                                {{ (session.performance_score * 100)|int }}%
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if session.summary %}
+                                    <div class="summary-sections">
+                                        {% if session.summary.overall_rating %}
+                                            <div class="summary-section">
+                                                <h4>Overall Rating</h4>
+                                                <p>{{ session.summary.overall_rating }}</p>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if session.summary.strengths %}
+                                            <div class="summary-section">
+                                                <h4>Strengths</h4>
+                                                <ul class="summary-list">
+                                                    {% for strength in session.summary.strengths %}
+                                                        <li>{{ strength }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if session.summary.areas_for_improvement %}
+                                            <div class="summary-section">
+                                                <h4>Areas for Improvement</h4>
+                                                <ul class="summary-list">
+                                                    {% for area in session.summary.areas_for_improvement %}
+                                                        <li>{{ area }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if session.summary.recommendations %}
+                                            <div class="summary-section">
+                                                <h4>Recommendations</h4>
+                                                <ul class="summary-list">
+                                                    {% for recommendation in session.summary.recommendations %}
+                                                        <li>{{ recommendation }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="interview-transcript">
+                                <h3>Interview Transcript</h3>
+                                <div class="transcript-container">
+                                    {% for entry in session.history %}
+                                        {% if entry.role == 'assistant' and entry.content %}
+                                            <div class="transcript-message interviewer">
+                                                <div class="message-avatar">
+                                                    <i class="fa-solid fa-robot"></i>
+                                                </div>
+                                                <div class="message-content">
+                                                    <div class="message-header">
+                                                        <span class="message-sender">AI Interviewer</span>
+                                                    </div>
+                                                    <div class="message-text">{{ entry.content }}</div>
+                                                </div>
+                                            </div>
+                                        {% elif entry.role == 'user' and entry.content %}
+                                            <div class="transcript-message user">
+                                                <div class="message-avatar">
+                                                    <i class="fa-solid fa-user"></i>
+                                                </div>
+                                                <div class="message-content">
+                                                    <div class="message-header">
+                                                        <span class="message-sender">You</span>
+                                                    </div>
+                                                    <div class="message-text">{{ entry.content }}</div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <div class="footer-content">
+                    <p><i class="fa-solid fa-bolt"></i> Powered by Groq | <i class="fa-regular fa-copyright"></i> 2025 InterviewPro AI</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

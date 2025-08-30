@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewPro AI - Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="dashboard-header">
+                <div class="logo-container">
+                    <i class="fa-solid fa-robot logo-icon"></i>
+                    <h1>InterviewPro<span class="accent">AI</span></h1>
+                </div>
+                <div class="user-nav">
+                    <div class="user-info">
+                        <span>Welcome, {{ current_user.name }}</span>
+                        <a href="/logout" class="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div class="dashboard-container">
+                    <div class="dashboard-sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <h3>{{ current_user.name }}</h3>
+                            <p>{{ current_user.email }}</p>
+                        </div>
+                        <nav class="dashboard-nav">
+                            <a href="/dashboard"><i class="fa-solid fa-home"></i> Dashboard</a>
+                            <a href="/interview"><i class="fa-solid fa-microphone"></i> New Interview</a>
+                            <a href="#"><i class="fa-solid fa-history"></i> Interview History</a>
+                            <a href="/settings" class="active"><i class="fa-solid fa-cog"></i> Settings</a>
+                        </nav>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <div class="dashboard-header">
+                            <h2>Account Settings</h2>
+                        </div>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <div class="settings-container">
+                            <div class="settings-section">
+                                <h3>Profile Information</h3>
+                                <form id="profile-form" class="settings-form" method="post" action="/update-profile">
+                                    <div class="form-group">
+                                        <label for="name">Full Name</label>
+                                        <input type="text" id="name" name="name" value="{{ current_user.name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email Address</label>
+                                        <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+                                    </div>
+                                    <button type="submit" class="primary-btn">Update Profile</button>
+                                </form>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3>Change Password</h3>
+                                <form id="password-form" class="settings-form" method="post" action="/update-password">
+                                    <div class="form-group">
+                                        <label for="current-password">Current Password</label>
+                                        <input type="password" id="current-password" name="current_password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="new-password">New Password</label>
+                                        <input type="password" id="new-password" name="new_password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirm-password">Confirm New Password</label>
+                                        <input type="password" id="confirm-password" name="confirm_password" required>
+                                    </div>
+                                    <button type="submit" class="primary-btn">Change Password</button>
+                                </form>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3>Interview Preferences</h3>
+                                <form id="preferences-form" class="settings-form" method="post" action="/update-preferences">
+                                    <div class="form-group">
+                                        <label for="default-difficulty">Default Interview Difficulty</label>
+                                        <select id="default-difficulty" name="default_difficulty">
+                                            <option value="Easy">Entry Level</option>
+                                            <option value="Medium" selected>Intermediate</option>
+                                            <option value="Hard">Advanced</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="focus-areas">Focus Areas</label>
+                                        <select id="focus-areas" name="focus_areas" multiple>
+                                            <option value="algorithms">Algorithms</option>
+                                            <option value="data-structures">Data Structures</option>
+                                            <option value="system-design">System Design</option>
+                                            <option value="behavioral">Behavioral</option>
+                                            <option value="frontend">Frontend Development</option>
+                                            <option value="backend">Backend Development</option>
+                                            <option value="database">Database</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="primary-btn">Save Preferences</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <div class="footer-content">
+                    <p><i class="fa-solid fa-bolt"></i> Powered by Groq | <i class="fa-regular fa-copyright"></i> 2025 InterviewPro AI</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
